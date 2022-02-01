@@ -39,3 +39,18 @@ If the rule should be removed from the `./conf/automation/js`, it will automatic
   by restarting OpenHAB). Maybe i'll add support for this later on.
 - When editing you page in OpenHAB, the widget will show up slots to add additional widgets or to configure subelements (this seems to be an OpenHAB behavior of which i haven't yet found out how to turn off
   for a custom widget).
+  
+## Screenshots
+### Player stopped 
+![Alt text](player_stopped.png?raw=true "Player stopped")
+  ### Player playing
+![Alt text](player_playing.png?raw=true "Player playing")
+  ### Player mobile
+![Alt text](player_playing_mobile.png?raw=true "Player mobile")
+### Volume configuration
+![Alt text](player_volume_configuration.png?raw=true "Volume configuration")  
+### Group configuration
+![Alt text](player_grouping_configuration.png?raw=true "Group configuration")  
+### Player ungrouped
+![Alt text](player_ungrouped.png?raw=true "Player ungrouped")
+    
