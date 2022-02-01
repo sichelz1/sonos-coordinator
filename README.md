@@ -5,7 +5,7 @@ The coordinator consists of the `sonos_coordinator_rule.js` file, which contains
 ## Requirements:
 - At least OpenHAB 3.2 or higher
 - OpenHAB Sonos binding
-- The JSRuntime plugin needs to be installed
+- The JSScripting plugin needs to be installed
 
 ## Installation
 1. Download the `sonos_coordinator_rule.js` file and copy it into the `./conf/automation/js` folder of your OpenHAB installation. 
