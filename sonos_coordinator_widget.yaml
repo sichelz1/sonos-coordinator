@@ -1,0 +1,352 @@
+uid: sonos_coordinator_widget_v1
+tags: []
+props:
+  parameters:
+    - description: Text for the title caption
+      label: Title caption
+      name: titleCaption
+      required: false
+      type: TEXT
+    - description: Text for the artist caption
+      label: Artist caption
+      name: artistCaption
+      required: false
+      type: TEXT
+    - description: Text for the album caption
+      label: Album caption
+      name: albumCaption
+      required: false
+      type: TEXT
+    - description: Text for the volume controls caption
+      label: Volume controls caption
+      name: volumeControlsCaption
+      required: false
+      type: TEXT
+    - description: Text for the group configuration caption
+      label: Group configuration caption
+      name: groupConfigurationCaption
+      required: false
+      type: TEXT
+  parameterGroups: []
+timestamp: Jan 31, 2022, 6:59:34 PM
+component: f7-card
+config: {}
+slots:
+  default:
+    - component: oh-swiper
+      config:
+        navigation: =JSON.parse(items['SonosCoordinatorProxyItem'].state).length > 1
+        pagination: =JSON.parse(items['SonosCoordinatorProxyItem'].state).length > 1
+      slots:
+        slides:
+          - component: oh-repeater
+            config:
+              for: sonosInfo
+              fragment: true
+              in: =JSON.parse(items['SonosCoordinatorProxyItem'].state)
+              sourceType: array
+            slots:
+              default:
+                - component: f7-swiper-slide
+                  slots:
+                    default:
+                      - component: oh-masonry
+                        config:
+                          cols:
+                            "1000": 1
+                            default: 2
+                        slots:
+                          default:
+                            - component: f7-block
+                              config: {}
+                              slots:
+                                default:
+                                  - component: f7-card
+                                    config:
+                                      content: "=items[loop.sonosInfo.artistItemName].state.length > 1 ? items[loop.sonosInfo.titelItemName].state : items[loop.sonosInfo.trackItemName].state.split('-').length < 2 ? items[loop.sonosInfo.titelItemName].state : items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('/').length == 2 ? items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('/')[0].trim() : items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('-').length == 2 ? items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('-')[0].trim() : items[loop.sonosInfo.titelItemName].state"
+                                      noShadow: true
+                                      style:
+                                        min-height: 110.5px
+                                        font-size: 25px
+                                      title: "=props.titleCaption === undefined ? 'Title' : props.titleCaption"
+                                  - component: f7-card
+                                    config:
+                                      content: "=items[loop.sonosInfo.artistItemName].state.length > 1 ? items[loop.sonosInfo.artistItemName].state : items[loop.sonosInfo.trackItemName].state.split('-').length < 2 ? items[loop.sonosInfo.artistItemName].state : items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('/').length == 2 ? items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('/')[1].trim() : items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('-').length == 2 ? items[loop.sonosInfo.trackItemName].state.split('-')[1].trim().split('-')[1].trim() : items[loop.sonosInfo.artistItemName].state"
+                                      noShadow: true
+                                      style:
+                                        min-height: 110.5px
+                                        font-size: 25px
+                                      title: "=props.artistCaption === undefined ? 'Artist' : props.artistCaption"
+                                  - component: f7-card
+                                    config:
+                                      content: =items[loop.sonosInfo.albumItemName].state
+                                      noShadow: true
+                                      style:
+                                        min-height: 110.5px
+                                        font-size: 25px
+                                      title: "=props.albumCaption === undefined ? 'Album' : props.albumCaption"
+                            - component: f7-block
+                              slots:
+                                default:
+                                  - component: f7-block
+                                    config:
+                                      style:
+                                        align-items: center
+                                        display: grid
+                                        grid-template-columns: 1fr
+                                        grid-template-rows: 1fr
+                                        justify-content: center
+                                    slots:
+                                      default:
+                                        - component: f7-block
+                                          config:
+                                            style:
+                                              display: flex
+                                              grid-area: 1 / 1 / 1 / 1
+                                              margin: auto
+                                              padding: 0
+                                              transform: "=(items[loop.sonosInfo.playerItemName].state === 'PLAY') ? 'translate(25%)' : ''"
+                                              transition: 1s ease-in-out
+                                              width: 75%
+                                          slots:
+                                            default:
+                                              - component: oh-image
+                                                config:
+                                                  style:
+                                                    animation: "=(items[loop.sonosInfo.playerItemName].state === 'PLAY') ? 'aurora-preloader-rotate 2s linear infinite' : ''"
+                                                    background-image: ='url(' + items[loop.sonosInfo.coverArtUrlItemName].state + ')'
+                                                    background-position: center
+                                                    background-repeat: no-repeat
+                                                    background-size: 36%
+                                                    margin: 0
+                                                    width: 99%
+                                                    z-index: 1
+                                                  url: "=(items[loop.sonosInfo.coverArtItemName].state !== 'UNDEF' && items[loop.sonosInfo.coverArtItemName].state !== 'NULL') ? 'http://192.168.188.2:8080/static/vinyl.png' : ''"
+                                        - component: oh-image
+                                          config:
+                                            item: =loop.sonosInfo.coverArtItemName
+                                            style:
+                                              grid-area: 1 / 1 / 1 / 1
+                                              margin: auto
+                                              transform: "= (items[loop.sonosInfo.playerItemName].state === 'PLAY') ? 'translate(-25%)' : ''"
+                                              transition: 1s ease-in-out
+                                              width: 75%
+                                              z-index: 2
+                                            visible: =items[loop.sonosInfo.coverArtItemName].state !== 'UNDEF' && items[loop.sonosInfo.coverArtItemName].state !== 'NULL'
+                      - component: f7-row
+                        config:
+                          style:
+                            justify-content: center
+                        slots:
+                          default:
+                            - component: oh-player-item
+                              config:
+                                class:
+                                  - display-flex
+                                  - align-content-stretch
+                                  - align-items-center
+                                  - justify-content-space-around
+                                  - margin-top
+                                item: =loop.sonosInfo.playerItemName
+                                style:
+                                  width: 150px
+                      - component: f7-card
+                        config:
+                          class: margin display-flex align-items-center justify-content-center
+                          noShadow: true
+                        slots:
+                          default:
+                            - component: f7-icon
+                              config:
+                                class: margin-horizontal
+                                f7: "=items[loop.sonosInfo.zoneMuteItemName].state == 'OFF' ? 'speaker_3' : 'speaker_slash' "
+                                size: 30
+                              slots:
+                                default:
+                                  - component: oh-button
+                                    config:
+                                      action: command
+                                      actionCommand: "=items[loop.sonosInfo.zoneMuteItemName].state == 'ON' ? 'OFF' : 'ON'"
+                                      actionItem: =loop.sonosInfo.zoneMuteItemName
+                                      style:
+                                        height: 100%
+                                        position: absolute
+                                        top: 0px
+                                        width: 100%
+                            - component: oh-slider
+                              config:
+                                item: =loop.sonosInfo.zoneVolumeItemName
+                                label: true
+                                releaseOnly: true
+                                style:
+                                  width: 80%
+                                unit: "%"
+                            - component: f7-icon
+                              config:
+                                class: margin-horizontal
+                                f7: hifispeaker
+                                size: 30
+                              slots:
+                                default:
+                                  - component: oh-button
+                                    config:
+                                      action: variable
+                                      actionVariable: =loop.sonosInfo.id + '_volume'
+                                      actionVariableValue: =loop.sonosInfo
+                                      style:
+                                        height: 100%
+                                        position: absolute
+                                        top: 0px
+                                        width: 100%
+                                    slots:
+                                      default:
+                                        - component: f7-popup
+                                          config:
+                                            closeByBackdropClick: false
+                                            opened: =vars[loop.sonosInfo.id + '_volume'] !== undefined
+                                            style:
+                                              height: auto
+                                          slots:
+                                            default:
+                                              - component: f7-card
+                                                config:
+                                                  title: "=props.volumeControlsCaption === undefined ? 'Volume controls' : props.volumeControlsCaption"
+                                                slots:
+                                                  default:
+                                                    - component: oh-repeater
+                                                      config:
+                                                        for: volumeItem
+                                                        fragment: true
+                                                        in: =vars[loop.sonosInfo.id + '_volume'].volumeInformation
+                                                        sourceType: array
+                                                      slots:
+                                                        default:
+                                                          - component: f7-row
+                                                            slots:
+                                                              default:
+                                                                - component: f7-col
+                                                                  config:
+                                                                    class: justify-content-center
+                                                                    style:
+                                                                      width: 33%
+                                                                  slots:
+                                                                    default:
+                                                                      - component: Label
+                                                                        config:
+                                                                          class: margin
+                                                                          text: =items[loop.volumeItem.zoneItemName].state
+                                                                - component: f7-col
+                                                                  config:
+                                                                    class: display-flex justify-content-center align-items-center
+                                                                    style:
+                                                                      width: 66%
+                                                                  slots:
+                                                                    default:
+                                                                      - component: f7-icon
+                                                                        config:
+                                                                          class: margin-horizontal
+                                                                          f7: "=items[loop.volumeItem.muteItemName].state == 'OFF' ? 'speaker_3' : 'speaker_slash' "
+                                                                          size: 30
+                                                                        slots:
+                                                                          default:
+                                                                            - component: oh-button
+                                                                              config:
+                                                                                action: command
+                                                                                actionCommand: "=items[loop.volumeItem.muteItemName].state == 'ON' ? 'OFF' : 'ON'"
+                                                                                actionItem: =loop.volumeItem.muteItemName
+                                                                                style:
+                                                                                  height: 100%
+                                                                                  position: absolute
+                                                                                  top: 0px
+                                                                                  width: 100%
+                                                                      - component: oh-slider
+                                                                        config:
+                                                                          class: margin
+                                                                          item: =loop.volumeItem.volumeItemName
+                                                                          label: true
+                                                                          releaseOnly: true
+                                                                          unit: "%"
+                                                    - component: oh-button
+                                                      config:
+                                                        clearVariable: =loop.sonosInfo.groupedThingDeleteVars
+                                                        popupClose: true
+                                                        text: OK
+                      - component: f7-row
+                        config:
+                          class: display-flex justify-content-center
+                        slots:
+                          default:
+                            - component: f7-card
+                              config:
+                                class: display-flex align-items-center
+                                noShadow: true
+                              slots:
+                                default:
+                                  - component: f7-icon
+                                    config:
+                                      class: margin
+                                      f7: link
+                                      size: 30
+                                  - component: Label
+                                    config:
+                                      class: margin-right
+                                      text: =loop.sonosInfo.zoneNames
+                                  - component: oh-button
+                                    config:
+                                      action: variable
+                                      actionVariable: =loop.sonosInfo.id + '_group'
+                                      actionVariableValue: =loop.sonosInfo
+                                      style:
+                                        height: 100%
+                                        position: absolute
+                                        width: 100%
+                                    slots:
+                                      default:
+                                        - component: f7-popup
+                                          config:
+                                            closeByBackdropClick: false
+                                            opened: =vars[loop.sonosInfo.id + '_group'] !== undefined
+                                            style:
+                                              height: auto
+                                          slots:
+                                            default:
+                                              - component: f7-card
+                                                config:
+                                                  title: "=props.groupConfigurationCaption === undefined ? 'Group configuration' : props.groupConfigurationCaption"
+                                                slots:
+                                                  default:
+                                                    - component: oh-repeater
+                                                      config:
+                                                        for: groupInfo
+                                                        fragment: true
+                                                        in: =vars[loop.sonosInfo.id + '_group'].groupedItemsInformation
+                                                        sourceType: array
+                                                      slots:
+                                                        default:
+                                                          - component: f7-row
+                                                            config:
+                                                              style:
+                                                                align-items: center
+                                                                justify-content: flex-start
+                                                            slots:
+                                                              default:
+                                                                - component: oh-button
+                                                                  config:
+                                                                    action: variable
+                                                                    actionVariable: =loop.groupInfo.thingUid
+                                                                    actionVariableValue: "=vars[loop.groupInfo.thingUid] === undefined ? !loop.groupInfo.isInGroup : !vars[loop.groupInfo.thingUid]"
+                                                                    class: margin
+                                                                    iconF7: "=vars[loop.groupInfo.thingUid] === undefined ? (loop.groupInfo.isInGroup ? 'checkmark_square' : 'square') : (vars[loop.groupInfo.thingUid] ? 'checkmark_square' : 'square')"
+                                                                    iconSize: 25px
+                                                                - component: Label
+                                                                  config:
+                                                                    text: =loop.groupInfo.name
+                                                    - component: oh-button
+                                                      config:
+                                                        action: command
+                                                        actionCommand: =JSON.stringify(vars)
+                                                        actionItem: =loop.sonosInfo.groupSwitcherItemName
+                                                        class: margin
+                                                        clearVariable: =loop.sonosInfo.groupedThingDeleteVars
+                                                        popupClose: true
+                                                        text: OK
