@@ -1,6 +1,5 @@
-uid: sonos_coordinator_widget_v1
-tags:
-  tags: []
+uid: sonos_coordinator_widget_v1_1
+tags: []
 props:
   parameters:
     - description: Text for the title caption
