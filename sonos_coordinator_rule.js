@@ -282,15 +282,17 @@ class SonosCoordinator{
             var muteItemName = gt.allThingItemNames[channelIds.muteChannelId];
             this.setMute(muteItemName, muteState);
         });
-
+        this.setMute(sonosThing.allThingItemNames[channelIds.muteChannelId], muteState);
     }
 
     setMute(itemName, muteValue){        
         var item = items.getItem(itemName);
+        
         if(item.state === muteValue){
             return;
         }
         this.updatingItems[itemName] = muteValue;
+        console.log("Setting mute of item " + item.name + " to " + muteValue);
         item.sendCommand(muteValue);
     }
 
@@ -470,9 +472,12 @@ scriptLoaded = function () {
 
 scriptUnloaded = function () {
     console.log("Sonos coordinator rule unload");
-    var foundItems = Array.from(items.getItemsByTag(proxyItemTagName));
+    var foundItems = Array.from(items.getItemsByTag(proxyItemTagName).map(item => item.name));
     foundItems.forEach(foundItem => {
-        console.log("Removing proxy item:" + foundItem.name)
-        items.removeItem(foundItem);
+        console.log("Removing proxy item:" + foundItem)
+        try {
+            items.removeItem(foundItem);   
+        } catch (e) {          
+        }
     });
 }
