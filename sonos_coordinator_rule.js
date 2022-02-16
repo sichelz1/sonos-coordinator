@@ -20,17 +20,28 @@ const channelIds = {
     removeChannelId : "remove",
     standaloneChannelId : "standalone",
     trackChannelId : "currenttrack",
-    muteChannelId : "mute"
+    muteChannelId : "mute",
+    favoriteChannelId: "favorite"
 };
 
 const services = {
     channelLinkRegistry : osgi.getService("org.openhab.core.thing.link.ItemChannelLinkRegistry"),    
-    thingRegistry : osgi.getService("org.openhab.core.thing.ThingRegistry")
+    thingRegistry : osgi.getService("org.openhab.core.thing.ThingRegistry"),
+    managedLinkProvider : osgi.getService("org.openhab.core.thing.link.ManagedItemChannelLinkProvider")
 }
 
 const constants = {
     sonosIdentifierString : "RINCON_"
 }
+
+const ItemChannelLink = Java.type("org.openhab.core.thing.link.ItemChannelLink");
+
+var createItemChannelLink = function(itemName, channel) {
+    console.log("Linking item " + itemName + " to channel " + channel.getUID());
+    var link = new ItemChannelLink(itemName, channel.getUID());
+    services.managedLinkProvider.add(link);
+    console.log("Link: " + link);
+}   
 
 var getChannelUidFromItem = function(item){
     let foundChannels = Array.from(services.channelLinkRegistry.getBoundChannels(item.name));
@@ -377,7 +388,8 @@ class SonosCoordinator{
             coordinatorProxyItem.muteItemName = sonosCoordinator.allThingItemNames[channelIds.muteChannelId];
             coordinatorProxyItem.zoneMuteItemName = sonosCoordinator.zoneMuteItemName;
             coordinatorProxyItem.groupSwitcherItemName = sonosCoordinator.groupSwitcherItemName;
-            
+            coordinatorProxyItem.favoriteItemName = sonosCoordinator.allThingItemNames[channelIds.favoriteChannelId];
+
             var zoneItemNames = new Array();
             var volumeItemsInformation = new Array();
             var groupedItemsInformation = new Array();
@@ -386,6 +398,7 @@ class SonosCoordinator{
 
             groupedThingDeleteVars.push(sonosCoordinator.thing.getUID().getId() + "_group");
             groupedThingDeleteVars.push(sonosCoordinator.thing.getUID().getId() + "_volume");
+            groupedThingDeleteVars.push(sonosCoordinator.thing.getUID().getId() + "_favorite");
 
             groupedSonosThings.forEach(gt => {
                 zoneItemNames.push(items.getItem(gt.allThingItemNames[channelIds.zoneNameChannelId]).state)
@@ -443,6 +456,7 @@ class SonosThing{
                 var channel = thing.getChannel(channelIds[key]);
                 var itemType = channel.getAcceptedItemType();
                 this.allThingItemNames[channelIds[key]] = items.addItem(thing.getUID().getId() + "_" +  channel.getLabel() + "_" + proxyItemTagName, itemType, undefined, new Array(controllerGroupName), undefined, new Array(proxyItemTagName)).name;
+                createItemChannelLink(this.allThingItemNames[channelIds[key]], channel)
             }
             else{
                 this.allThingItemNames[channelIds[key]] = foundItem.name;
