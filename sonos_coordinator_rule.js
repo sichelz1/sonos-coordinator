@@ -114,6 +114,11 @@ class SonosCoordinator{
                 console.log("Rule Zone volume proxy " + data.itemName + "received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
 
+                if(changedThing === undefined){
+                    console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
+                    return;
+                }
+
                 this.onZoneVolumeChanged(changedThing);
             }
         });        
@@ -125,6 +130,10 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule Volume item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
+                if(changedThing === undefined){
+                    console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
+                    return;
+                }
                 this.onVolumeChanged(changedThing);
             }
         }); 
@@ -136,6 +145,12 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule group switch item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
+
+                if(changedThing === undefined){
+                    console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
+                    return;
+                }
+
                 this.onGroupSwitched(changedThing);
             }
         }); 
@@ -147,6 +162,12 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule mute item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
+                
+                if(changedThing === undefined){
+                    console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
+                    return;
+                }                
+
                 this.onMuteChanged(changedThing);
             }
         }); 
@@ -158,6 +179,12 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule zone mute item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
+
+                if(changedThing === undefined){
+                    console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
+                    return;
+                }
+
                 this.onGroupMuteChanged(changedThing);
             }
         });         
@@ -282,7 +309,6 @@ class SonosCoordinator{
             var muteItemName = gt.allThingItemNames[channelIds.muteChannelId];
             this.setMute(muteItemName, muteState);
         });
-        this.setMute(sonosThing.allThingItemNames[channelIds.muteChannelId], muteState);
     }
 
     setMute(itemName, muteValue){        
@@ -326,10 +352,10 @@ class SonosCoordinator{
 
     getAllGroupedSonosThings(sonosThing){
         if(!sonosThing.isZoneCoordinator()){
-            return null;
+            return Array.from(sonosThing);
         }
 
-        return this.allSonosThings.filter(st => items.getItem(st.allThingItemNames[channelIds.masterChannelId]).state === sonosThing.thing.getUID().getId());
+        return this.allSonosThings.filter(st => st.getMasterId() === sonosThing.thing.getUID().getId() || st.thing.getUID().getId() === sonosThing.thing.getUID().getId());
     }
 
     updateCoordinatorProxyItems(){
@@ -386,7 +412,7 @@ class SonosCoordinator{
             var idCounter = 0;
             allOtherSonosItems.forEach(aosi => {
                 var groupedItemInformation = {};
-                groupedItemInformation.isInGroup = groupedSonosThings.some(gst => items.getItem(aosi.allThingItemNames[channelIds.masterChannelId]).state === gst.thing.getUID().getId());
+                groupedItemInformation.isInGroup = groupedSonosThings.some(gst => aosi.getMasterId() === gst.thing.getUID().getId());
                 groupedItemInformation.name = items.getItem(aosi.allThingItemNames[channelIds.zoneNameChannelId]).state
                 groupedItemInformation.thingUid = aosi.thing.getUID().getId();
                 groupedItemInformation.id = "itemInfo_" + idCounter;
@@ -449,7 +475,12 @@ class SonosThing{
     }
 
     getMasterId(){
-        return items.getItem(this.allThingItemNames[channelIds.masterChannelId]).state;
+        
+        var masterString = items.getItem(this.allThingItemNames[channelIds.masterChannelId]).state;
+        if(!masterString.includes(constants.sonosIdentifierString)){
+            return this.thing.getUID().getId();
+        }
+        return masterString;
     }
 
     getVolume(){
