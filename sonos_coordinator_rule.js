@@ -519,6 +519,13 @@ scriptUnloaded = function () {
     console.log("Sonos coordinator rule unload");
     var foundItems = Array.from(items.getItemsByTag(proxyItemTagName).map(item => item.name));
     foundItems.forEach(foundItem => {
+        let foundLinks = Array.from(services.channelLinkRegistry.getLinks(foundItem));
+                
+        foundLinks.forEach(foundLink => {
+            console.log("Removing link " + foundLink);
+            services.managedLinkProvider.remove(foundLink.getUID());
+        });      
+        
         console.log("Removing proxy item:" + foundItem)
         try {
             items.removeItem(foundItem);   
