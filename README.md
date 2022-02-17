@@ -19,6 +19,7 @@ The coordinator consists of the `sonos_coordinator_rule.js` file, which contains
 - Add or remove players from/to the the current zone player
 - Control the state of the zone player (Play/Pause/Next/Previouse)
 - Display the cover art of the currently played track of the zone player
+- Display and select favorites defined in the sonos app
 - Display title, artist and album information of the currently played track of the zone player
 - If the title or artist information is lacking (e.g. when listening to a radio station), the widget tries to parse the information from the track item 
   (although not 100% reliable, this works for the german radio stations i am listening to).
