@@ -121,6 +121,7 @@ slots:
                                             default:
                                               - component: oh-image
                                                 config:
+                                                  visible: =items[loop.sonosInfo.coverArtItemName].state !== 'UNDEF' && items[loop.sonosInfo.coverArtItemName].state !== 'NULL'
                                                   style:
                                                     animation: "=(items[loop.sonosInfo.playerItemName].state === 'PLAY') ? 'aurora-preloader-rotate 2s linear infinite' : ''"
                                                     background-image: ='url(' + items[loop.sonosInfo.coverArtUrlItemName].state + ')'
