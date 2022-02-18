@@ -39,8 +39,8 @@ slots:
   default:
     - component: oh-swiper
       config:
-        navigation: =JSON.parse(items['SonosCoordinatorProxyItem'].state).length > 1
-        pagination: =JSON.parse(items['SonosCoordinatorProxyItem'].state).length > 1
+        navigation: true
+        pagination: true
         style:
           width: 100%
       slots:
