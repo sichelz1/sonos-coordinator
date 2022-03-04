@@ -411,7 +411,7 @@ slots:
                                                                     action: variable
                                                                     actionVariable: =loop.groupInfo.thingUid
                                                                     actionVariableValue: "=vars[loop.groupInfo.thingUid] === undefined ? !loop.groupInfo.isInGroup : !vars[loop.groupInfo.thingUid]"
-                                                                    class: margin
+                                                                    
                                                                     iconF7: "=vars[loop.groupInfo.thingUid] === undefined ? (loop.groupInfo.isInGroup ? 'checkmark_square' : 'square') : (vars[loop.groupInfo.thingUid] ? 'checkmark_square' : 'square')"
                                                                     iconSize: 25px
                                                                 - component: Label
