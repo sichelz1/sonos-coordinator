@@ -433,7 +433,7 @@ class SonosCoordinator{
                 groupedThingDeleteVars.push(aosi.thing.getUID().getId());
                 idCounter++;
             });
-            coordinatorProxyItem.zoneNames = zoneItemNames.join(" + ");
+            coordinatorProxyItem.zoneNames = Array.from([...new Set(zoneItemNames)]).join(" + ");
             coordinatorProxyItem.volumeInformation = volumeItemsInformation;
             coordinatorProxyItem.groupedItemsInformation = groupedItemsInformation;
             coordinatorProxyItem.groupedThingDeleteVars = groupedThingDeleteVars;
