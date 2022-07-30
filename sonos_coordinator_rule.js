@@ -6,76 +6,91 @@ const groupSwitcherItemTagName = "GroupSwitcher_SonosProxyItem";
 const zoneMuteProxyItemTagName = "ZoneMute_SonosProxyItem";
 
 const channelIds = {
-    playerChannelId : "control",
-    albumChannelId : "currentalbum",
+    playerChannelId: "control",
+    albumChannelId: "currentalbum",
     artistChannelId: "currentartist",
-    coverArtChannelId : "currentalbumart",
-    coverArtChannelUrlId : "currentalbumarturl",
-    titleChannelId : "currenttitle",
-    masterChannelId : "coordinator",
-    localMasterChannelId : "localcoordinator",
-    volumeChannelId : "volume",
-    zoneNameChannelId : "zonename",
-    addChannelId : "add",
-    removeChannelId : "remove",
-    standaloneChannelId : "standalone",
-    trackChannelId : "currenttrack",
-    muteChannelId : "mute",
+    coverArtChannelId: "currentalbumart",
+    coverArtChannelUrlId: "currentalbumarturl",
+    titleChannelId: "currenttitle",
+    masterChannelId: "coordinator",
+    localMasterChannelId: "localcoordinator",
+    volumeChannelId: "volume",
+    zoneNameChannelId: "zonename",
+    addChannelId: "add",
+    removeChannelId: "remove",
+    standaloneChannelId: "standalone",
+    trackChannelId: "currenttrack",
+    muteChannelId: "mute",
     favoriteChannelId: "favorite"
 };
 
 const services = {
-    channelLinkRegistry : osgi.getService("org.openhab.core.thing.link.ItemChannelLinkRegistry"),    
-    thingRegistry : osgi.getService("org.openhab.core.thing.ThingRegistry"),
-    managedLinkProvider : osgi.getService("org.openhab.core.thing.link.ManagedItemChannelLinkProvider")
+    channelLinkRegistry: osgi.getService("org.openhab.core.thing.link.ItemChannelLinkRegistry"),
+    thingRegistry: osgi.getService("org.openhab.core.thing.ThingRegistry"),
+    managedLinkProvider: osgi.getService("org.openhab.core.thing.link.ManagedItemChannelLinkProvider")
 }
 
 const constants = {
-    sonosIdentifierString : "RINCON_"
+    sonosIdentifierString: "RINCON_"
 }
 
 const ItemChannelLink = Java.type("org.openhab.core.thing.link.ItemChannelLink");
 
-var createItemChannelLink = function(itemName, channel) {
+var createItemChannelLink = function (itemName, channel) {
     console.log("Linking item " + itemName + " to channel " + channel.getUID());
     var link = new ItemChannelLink(itemName, channel.getUID());
     services.managedLinkProvider.add(link);
     console.log("Link: " + link);
-}   
-
-var getChannelUidFromItem = function(item){
-    let foundChannels = Array.from(services.channelLinkRegistry.getBoundChannels(item.name));
-    return foundChannels.find(channel => channel.getThingUID().getId().includes(constants.sonosIdentifierString));  
 }
 
-var getItemBoundToChannel = function(thingUidString, channelIdString){
-    var item = items.getItemsByTag().find(item => {    
+var getChannelUidFromItem = function (item) {
+    let foundChannels = Array.from(services.channelLinkRegistry.getBoundChannels(item.name));
+    return foundChannels.find(channel => channel.getThingUID().getId().includes(constants.sonosIdentifierString));
+}
+
+var getItemBoundToChannel = function (thingUidString, channelIdString) {
+    var item = items.getItemsByTag().find(item => {
         let channelUid = getChannelUidFromItem(item);
-        if(channelUid === undefined) return null;    
+        if (channelUid === undefined) return null;
         return channelUid.getThingUID().getId() === thingUidString && channelUid.getId() === channelIdString;
     });
-    if(item === undefined){
+    if (item === undefined) {
         return null;
     }
     return item;
 }
 
-var getAllSonosThings = function(){
-    let foundThings =  Array.from(services.thingRegistry.getAll());
+var getAllSonosThings = function () {
+    let foundThings = Array.from(services.thingRegistry.getAll());
     return foundThings.filter(thing => thing.getUID().getId().startsWith(constants.sonosIdentifierString));
 }
 
-var itemExists = function(itemName){
+var itemExists = function (itemName) {
     return items.getItem(itemName, true) !== null;
 }
 
-class SonosCoordinator{
+var addItem = function (itemName = undefined, itemType = undefined, category = undefined, groups = undefined, label = undefined, tags = undefined, giBaseType = undefined, groupFunction = undefined, channels = undefined, metadata = undefined) {
+    return items.addItem({
+        type: itemType,
+        name: itemName,
+        label: label,
+        category: category,
+        groups: groups,
+        tags: tags,
+        channels: channels,
+        metadata: metadata,
+        giBaseType: giBaseType,
+        groupFunction: groupFunction,
+    });
+}
 
-    constructor(){
-        this.group = itemExists(controllerGroupName) ? items.getItem(controllerGroupName) : items.addItem(controllerGroupName, "Group", undefined, undefined, undefined, new Array(proxyItemTagName));
+class SonosCoordinator {
+
+    constructor() {
+        this.group = itemExists(controllerGroupName) ? items.getItem(controllerGroupName) : addItem(controllerGroupName, "Group", undefined, undefined, undefined, new Array(proxyItemTagName));
 
         this.allSonosThings = getAllSonosThings().map(thing => new SonosThing(thing, this.onZoneVolumeChanged, this.onVolumeChanged));
-        
+
         var coordinatorTriggerArray = new Array();
         var volumeTriggerArray = new Array();
         var zoneVolumeTriggerArray = new Array();
@@ -92,17 +107,17 @@ class SonosCoordinator{
 
             zoneVolumeTriggerArray.push(triggers.ItemCommandTrigger(sonosThing.zoneVolumeItemName));
 
-            groupSwitchTriggerArray.push(triggers.ItemCommandTrigger(sonosThing.groupSwitcherItemName));            
-           
+            groupSwitchTriggerArray.push(triggers.ItemCommandTrigger(sonosThing.groupSwitcherItemName));
+
             zoneMuteTriggerArray.push(triggers.ItemCommandTrigger(sonosThing.zoneMuteItemName));
         });
 
 
         this.updatingItems = {};
-        
-        if(!itemExists(coordinatorProxyItemTagName)){
-            items.addItem(coordinatorProxyItemTagName, "String", undefined, new Array(controllerGroupName), undefined, new Array(proxyItemTagName, coordinatorProxyItemTagName));
-        } 
+
+        if (!itemExists(coordinatorProxyItemTagName)) {
+            addItem(coordinatorProxyItemTagName, "String", undefined, new Array(controllerGroupName), undefined, new Array(proxyItemTagName, coordinatorProxyItemTagName));
+        }
 
         this.updateCoordinatorProxyItems();
 
@@ -114,7 +129,7 @@ class SonosCoordinator{
                 console.log("Entering rule A coordinator item has changed for item " + data.itemName);
                 this.updateCoordinatorProxyItems();
             }
-        });        
+        });
 
 
         rules.JSRule({
@@ -125,14 +140,14 @@ class SonosCoordinator{
                 console.log("Rule Zone volume proxy " + data.itemName + "received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
 
-                if(changedThing === undefined){
+                if (changedThing === undefined) {
                     console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
                     return;
                 }
 
                 this.onZoneVolumeChanged(changedThing);
             }
-        });        
+        });
 
         rules.JSRule({
             name: "A volume item received a command",
@@ -141,13 +156,13 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule Volume item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
-                if(changedThing === undefined){
+                if (changedThing === undefined) {
                     console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
                     return;
                 }
                 this.onVolumeChanged(changedThing);
             }
-        }); 
+        });
 
         rules.JSRule({
             name: "A group switch item received a command",
@@ -157,14 +172,14 @@ class SonosCoordinator{
                 console.log("Rule group switch item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
 
-                if(changedThing === undefined){
+                if (changedThing === undefined) {
                     console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
                     return;
                 }
 
                 this.onGroupSwitched(changedThing);
             }
-        }); 
+        });
 
         rules.JSRule({
             name: "A mute item received a command",
@@ -173,15 +188,15 @@ class SonosCoordinator{
             execute: data => {
                 console.log("Rule mute item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
-                
-                if(changedThing === undefined){
+
+                if (changedThing === undefined) {
                     console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
                     return;
-                }                
+                }
 
                 this.onMuteChanged(changedThing);
             }
-        }); 
+        });
 
         rules.JSRule({
             name: "A zone mute item received a command",
@@ -191,32 +206,32 @@ class SonosCoordinator{
                 console.log("Rule zone mute item " + data.itemName + " received command started!");
                 var changedThing = this.getSonosThingFromItemName(data.itemName);
 
-                if(changedThing === undefined){
+                if (changedThing === undefined) {
                     console.log("Did not find a thing for the changed item " + data.itemName + ". Therefor the rule will be ignored!");
                     return;
                 }
 
                 this.onGroupMuteChanged(changedThing);
             }
-        });         
+        });
 
     }
 
-    onZoneVolumeChanged(sonosThing){
+    onZoneVolumeChanged(sonosThing) {
         console.log("Zone volume for " + sonosThing.thing.getLabel() + " changed.");
-        if(this.wasOwnUpdate(sonosThing.zoneVolumeItemName)){
+        if (this.wasOwnUpdate(sonosThing.zoneVolumeItemName)) {
             return;
         }
-        if(!sonosThing.isZoneCoordinator()){
+        if (!sonosThing.isZoneCoordinator()) {
             console.log("Returning from onZoneVolumeChanged as the thing is not a zone coordinator!");
             return
-        }        
+        }
 
         var allGroupedThings = this.allSonosThings.filter(st => st.getMasterId() === sonosThing.thing.getUID().getId());
 
         var groupedAvgVolume = 0.0;
         allGroupedThings.forEach(gt => {
-            groupedAvgVolume += gt.getVolume(); 
+            groupedAvgVolume += gt.getVolume();
         })
 
         groupedAvgVolume = groupedAvgVolume / allGroupedThings.length;
@@ -224,27 +239,27 @@ class SonosCoordinator{
         var delta = Math.round(sonosThing.getZoneVolume() - groupedAvgVolume);
         console.log("Groupe avg volume is " + groupedAvgVolume + ". Calculated delta is " + delta);
 
-        if(delta === 0){
+        if (delta === 0) {
             return;
         }
 
         allGroupedThings.forEach(st => {
             var newValue = st.getVolume() + delta;
-            if(newValue > 100.0){
+            if (newValue > 100.0) {
                 newValue = 100.0;
             }
-            if(newValue < 0.0){
+            if (newValue < 0.0) {
                 newValue = 0.0;
             }
             this.setNewVolume(st.allThingItemNames[channelIds.volumeChannelId], newValue)
         });
     }
 
-    onVolumeChanged(sonosThing){
+    onVolumeChanged(sonosThing) {
         console.log("Volume for " + sonosThing.thing.getLabel() + " changed.");
-        if(this.wasOwnUpdate(sonosThing.allThingItemNames[channelIds.volumeChannelId])){
+        if (this.wasOwnUpdate(sonosThing.allThingItemNames[channelIds.volumeChannelId])) {
             return;
-        }        
+        }
         var masterThing = this.allSonosThings.find(st => st.thing.getUID().getId() === sonosThing.getMasterId());
 
         var newVolume = 0.0;
@@ -254,47 +269,47 @@ class SonosCoordinator{
         this.setNewVolume(masterThing.zoneVolumeItemName, newVolume);
     }
 
-    onGroupSwitched(sonosThing){
+    onGroupSwitched(sonosThing) {
         var groupConfigurationString = items.getItem(sonosThing.groupSwitcherItemName).state;
         console.log("A group configuration has changed: " + groupConfigurationString);
-        if(!sonosThing.isZoneCoordinator()){
+        if (!sonosThing.isZoneCoordinator()) {
             console.log("Skipping group changes as thing " + sonosThing.thing.getLabel() + " is not a zone coordinator!");
             return;
         }
-        var groupConfiguration =JSON.parse(groupConfigurationString);
-        Object.keys(groupConfiguration).forEach(configKey =>{
+        var groupConfiguration = JSON.parse(groupConfigurationString);
+        Object.keys(groupConfiguration).forEach(configKey => {
             var groupThing = this.allSonosThings.find(st => st.thing.getUID().getId() === configKey);
-            if(groupThing === undefined){
+            if (groupThing === undefined) {
                 return;
             }
-            if(groupConfiguration[configKey]){
+            if (groupConfiguration[configKey]) {
                 console.log("Adding " + groupThing.thing.getLabel() + " to group of " + sonosThing.thing.getLabel());
                 items.getItem(sonosThing.allThingItemNames[channelIds.addChannelId]).sendCommand(groupThing.thing.getUID().getId());
             }
-            else{
-                console.log("Removing " + groupThing.thing.getLabel() + " from group of " + sonosThing.thing.getLabel());                
+            else {
+                console.log("Removing " + groupThing.thing.getLabel() + " from group of " + sonosThing.thing.getLabel());
                 items.getItem(groupThing.allThingItemNames[channelIds.standaloneChannelId]).sendCommand("ON");
             }
         });
 
     }
 
-    onMuteChanged(sonosThing){
-        console.log("Mute for " + sonosThing.thing.getLabel() + " changed.");        
-        if(this.wasOwnUpdate(sonosThing.allThingItemNames[channelIds.muteChannelId])){
+    onMuteChanged(sonosThing) {
+        console.log("Mute for " + sonosThing.thing.getLabel() + " changed.");
+        if (this.wasOwnUpdate(sonosThing.allThingItemNames[channelIds.muteChannelId])) {
             console.log("returning as the muted/unmuted sonos device was triggered by this rule");
             return;
         }
         var masterThing = this.allSonosThings.find(st => st.thing.getUID().getId() === sonosThing.getMasterId());
-        
+
         var muteValue = this.getZoneMuteState(masterThing);
         this.setMute(masterThing.zoneMuteItemName, muteValue);
     }
 
-    getZoneMuteState(sonosThing){
+    getZoneMuteState(sonosThing) {
         var unmutedThingFound = false;
         this.getAllGroupedSonosThings(sonosThing).forEach(gt => {
-            if(unmutedThingFound){
+            if (unmutedThingFound) {
                 return;
             }
             unmutedThingFound = items.getItem(gt.allThingItemNames[channelIds.muteChannelId]).state === "OFF";
@@ -303,29 +318,29 @@ class SonosCoordinator{
         return unmutedThingFound ? "OFF" : "ON";
     }
 
-    onGroupMuteChanged(sonosThing){
-        if(!sonosThing.isZoneCoordinator()){
+    onGroupMuteChanged(sonosThing) {
+        if (!sonosThing.isZoneCoordinator()) {
             console.log("returning as the muted/unmuted sonos device is not a zone coordinator");
             return;
         }
-        if(this.wasOwnUpdate(sonosThing.zoneMuteItemName)){
+        if (this.wasOwnUpdate(sonosThing.zoneMuteItemName)) {
             console.log("returning as the muted/unmuted sonos zone device was triggered by this rule");
             return;
         }
 
         var groupedThings = this.getAllGroupedSonosThings(sonosThing);
         var muteState = items.getItem(sonosThing.zoneMuteItemName).state;
-        console.log("Setting mute state to " + muteState + " of all grouped sonos players of from zone coordinator " +sonosThing.thing.getLabel());
+        console.log("Setting mute state to " + muteState + " of all grouped sonos players of from zone coordinator " + sonosThing.thing.getLabel());
         groupedThings.forEach(gt => {
             var muteItemName = gt.allThingItemNames[channelIds.muteChannelId];
             this.setMute(muteItemName, muteState);
         });
     }
 
-    setMute(itemName, muteValue){        
+    setMute(itemName, muteValue) {
         var item = items.getItem(itemName);
-        
-        if(item.state === muteValue){
+
+        if (item.state === muteValue) {
             return;
         }
         this.updatingItems[itemName] = muteValue;
@@ -333,47 +348,47 @@ class SonosCoordinator{
         item.sendCommand(muteValue);
     }
 
-    getSonosThingFromItemName(itemName){
+    getSonosThingFromItemName(itemName) {
         return this.allSonosThings.find(sonosThing => Object.keys(sonosThing.allThingItemNames).some(key => sonosThing.allThingItemNames[key] === itemName) || sonosThing.groupSwitcherItemName === itemName || sonosThing.zoneVolumeItemName === itemName || sonosThing.zoneMuteItemName === itemName);
     }
 
-    wasOwnUpdate(itemName){
-        if(this.updatingItems.hasOwnProperty(itemName)){
+    wasOwnUpdate(itemName) {
+        if (this.updatingItems.hasOwnProperty(itemName)) {
             console.log("Removing " + itemName + " from updating items as its target and returning true for wasOwnUpdate");
             delete this.updatingItems[itemName];
             return true;
-        }        
-        return false;        
+        }
+        return false;
     }
 
-    setNewVolume(itemName, newVolume){
+    setNewVolume(itemName, newVolume) {
         var itemVolume = parseFloat(items.getItem(itemName).state);
-        if(itemVolume === newVolume){
+        if (itemVolume === newVolume) {
             return;
         }
-        console.log("Setting "+ itemName +" to new volume " + newVolume);
+        console.log("Setting " + itemName + " to new volume " + newVolume);
         this.updatingItems[itemName] = newVolume;
         items.getItem(itemName).sendCommand(newVolume);
 
     }
 
-    getSonosCoordinatorProxyItemName(sonosThing){
+    getSonosCoordinatorProxyItemName(sonosThing) {
         return sonosThing.thing.getUID().getId() + "_" + coordinatorProxyItemTagName;
     }
 
-    getAllGroupedSonosThings(sonosThing){
-        if(!sonosThing.isZoneCoordinator()){
+    getAllGroupedSonosThings(sonosThing) {
+        if (!sonosThing.isZoneCoordinator()) {
             return Array.from(sonosThing);
         }
 
         return this.allSonosThings.filter(st => st.getMasterId() === sonosThing.thing.getUID().getId() || st.thing.getUID().getId() === sonosThing.thing.getUID().getId());
     }
 
-    updateCoordinatorProxyItems(){
+    updateCoordinatorProxyItems() {
         var allCoordinators = this.allSonosThings.filter(sonosThing => sonosThing.isZoneCoordinator());
         var coordinatorArray = new Array();
         allCoordinators.forEach(sonosCoordinator => {
-            var groupedSonosThings = Array.from(this.getAllGroupedSonosThings(sonosCoordinator));            
+            var groupedSonosThings = Array.from(this.getAllGroupedSonosThings(sonosCoordinator));
 
             var coordinatorProxyItem = {};
             coordinatorProxyItem.id = sonosCoordinator.thing.getUID().getId();
@@ -394,7 +409,7 @@ class SonosCoordinator{
             var volumeItemsInformation = new Array();
             var groupedItemsInformation = new Array();
             var groupedThingDeleteVars = new Array();
-            var groupVolume = 0.0;                                   
+            var groupVolume = 0.0;
 
             groupedThingDeleteVars.push(sonosCoordinator.thing.getUID().getId() + "_group");
             groupedThingDeleteVars.push(sonosCoordinator.thing.getUID().getId() + "_volume");
@@ -412,7 +427,7 @@ class SonosCoordinator{
 
             });
 
-            if(groupedSonosThings.length > 0)
+            if (groupedSonosThings.length > 0)
                 groupVolume = Math.round(groupVolume / groupedSonosThings.length);
 
             items.getItem(sonosCoordinator.zoneVolumeItemName).postUpdate(groupVolume);
@@ -443,8 +458,8 @@ class SonosCoordinator{
     }
 }
 
-class SonosThing{
-    constructor(thing, onZoneVolumeChanged, onVolumeChanged){
+class SonosThing {
+    constructor(thing, onZoneVolumeChanged, onVolumeChanged) {
         this.onZoneVolumeChanged = onZoneVolumeChanged;
         this.onVolumeChanged = onVolumeChanged;
         this.thing = thing;
@@ -452,57 +467,57 @@ class SonosThing{
 
         Object.keys(channelIds).forEach(key => {
             var foundItem = getItemBoundToChannel(thing.getUID().getId(), channelIds[key]);
-            if(foundItem === null){
+            if (foundItem === null) {
                 var channel = thing.getChannel(channelIds[key]);
                 var itemType = channel.getAcceptedItemType();
-                this.allThingItemNames[channelIds[key]] = items.addItem(thing.getUID().getId() + "_" +  channel.getLabel() + "_" + proxyItemTagName, itemType, undefined, new Array(controllerGroupName), undefined, new Array(proxyItemTagName)).name;
+                this.allThingItemNames[channelIds[key]] = addItem(thing.getUID().getId() + "_" + channel.getLabel() + "_" + proxyItemTagName, itemType, undefined, new Array(controllerGroupName), undefined, new Array(proxyItemTagName)).name;
                 createItemChannelLink(this.allThingItemNames[channelIds[key]], channel)
             }
-            else{
+            else {
                 this.allThingItemNames[channelIds[key]] = foundItem.name;
-            }            
+            }
         });
 
         this.volumeItemName = this.allThingItemNames[channelIds.volumeChannelId];
         var zoneVolumeItemName = thing.getUID().getId() + "_" + zoneVolumeProxyItemTagName;
         var zoneVolumeItemType = thing.getChannel(channelIds.volumeChannelId).getAcceptedItemType();
-        var zoneVolumeItem = itemExists(zoneVolumeItemName) ? items.getItem(zoneVolumeItemName) : items.addItem(zoneVolumeItemName, zoneVolumeItemType, undefined, undefined, undefined, new Array(proxyItemTagName, zoneVolumeProxyItemTagName));
+        var zoneVolumeItem = itemExists(zoneVolumeItemName) ? items.getItem(zoneVolumeItemName) : addItem(zoneVolumeItemName, zoneVolumeItemType, undefined, undefined, undefined, new Array(proxyItemTagName, zoneVolumeProxyItemTagName));
 
         this.zoneVolumeItemName = zoneVolumeItem.name;
 
         var groupSwichterItemName = thing.getUID().getId() + "_" + groupSwitcherItemTagName;
 
-        var groupSwitcherItem = itemExists(groupSwichterItemName) ? items.getItem(groupSwichterItemName) : items.addItem(groupSwichterItemName, "String", undefined, undefined, undefined, new Array(proxyItemTagName, groupSwitcherItemTagName));
+        var groupSwitcherItem = itemExists(groupSwichterItemName) ? items.getItem(groupSwichterItemName) : addItem(groupSwichterItemName, "String", undefined, undefined, undefined, new Array(proxyItemTagName, groupSwitcherItemTagName));
 
-        this.groupSwitcherItemName = groupSwitcherItem.name;                      
+        this.groupSwitcherItemName = groupSwitcherItem.name;
 
         var zoneMuteItemName = thing.getUID().getId() + "_" + zoneMuteProxyItemTagName;
         var zoneMuteItemType = thing.getChannel(channelIds.muteChannelId).getAcceptedItemType();
-        var zoneMuteItem = itemExists(zoneMuteItemName) ? items.getItem(zoneMuteItemName) : items.addItem(zoneMuteItemName, zoneMuteItemType, undefined, undefined, undefined, new Array(proxyItemTagName, zoneMuteProxyItemTagName));
+        var zoneMuteItem = itemExists(zoneMuteItemName) ? items.getItem(zoneMuteItemName) : addItem(zoneMuteItemName, zoneMuteItemType, undefined, undefined, undefined, new Array(proxyItemTagName, zoneMuteProxyItemTagName));
 
         this.zoneMuteItemName = zoneMuteItem.name;
     }
-    isZoneCoordinator(){
+    isZoneCoordinator() {
         var thingName = this.allThingItemNames[channelIds.localMasterChannelId];
         var localMasterItem = items.getItem(thingName);
         return localMasterItem.state == "ON";
     }
 
-    getMasterId(){
-        
+    getMasterId() {
+
         var masterString = items.getItem(this.allThingItemNames[channelIds.masterChannelId]).state;
-        if(!masterString.includes(constants.sonosIdentifierString)){
+        if (!masterString.includes(constants.sonosIdentifierString)) {
             return this.thing.getUID().getId();
         }
         return masterString;
     }
 
-    getVolume(){
+    getVolume() {
         var volume = parseFloat(items.getItem(this.allThingItemNames[channelIds.volumeChannelId]).state);
         return isNaN(volume) ? 0.0 : volume;
     }
 
-    getZoneVolume(){
+    getZoneVolume() {
         var zoneVolume = parseFloat(items.getItem(this.zoneVolumeItemName).state);
         return isNaN(zoneVolume) ? 0.0 : zoneVolume;
     }
@@ -520,16 +535,16 @@ scriptUnloaded = function () {
     var foundItems = Array.from(items.getItemsByTag(proxyItemTagName).map(item => item.name));
     foundItems.forEach(foundItem => {
         let foundLinks = Array.from(services.channelLinkRegistry.getLinks(foundItem));
-                
+
         foundLinks.forEach(foundLink => {
             console.log("Removing link " + foundLink);
             services.managedLinkProvider.remove(foundLink.getUID());
-        });      
-        
+        });
+
         console.log("Removing proxy item:" + foundItem)
         try {
-            items.removeItem(foundItem);   
-        } catch (e) {          
+            items.removeItem(foundItem);
+        } catch (e) {
         }
     });
 }
